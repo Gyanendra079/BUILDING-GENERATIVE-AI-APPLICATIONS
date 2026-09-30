@@ -10,7 +10,7 @@ This repository serves as a practical portfolio of AI implementations, transitio
 
 All concepts, code blocks, and architectures described in this repository have been fully documented and executed in an interactive Google Colab environment. 
 
-👉 **[Link to Google Colab Notebook - Insert Link Here]**
+👉 **https://colab.research.google.com/drive/1fd17YjvSnRGUVoluy-jSP_EC1305ayu-?usp=sharing**
 
 I highly recommend opening the Colab notebook to run the code, experiment with the prompts, and see the AI agents in action.
 

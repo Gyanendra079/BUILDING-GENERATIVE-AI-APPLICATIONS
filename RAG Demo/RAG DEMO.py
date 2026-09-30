@@ -1,61 +1,102 @@
-# pip install langchain
-# pip install langchain-text-splitter
-# pip install langchain-community 
-# pip install langchain-huggingface 
-# pip install sentence-transformers 
-# pip install chromadb
+# ============================================================
+# SIMPLE RAG DEMO USING HUGGING FACE + CHROMA
+# ============================================================
+#
+# Install:
+#
+# python -m pip install -U langchain
+# python -m pip install -U langchain-text-splitters
+# python -m pip install -U langchain-community
+# python -m pip install -U langchain-huggingface
+# python -m pip install -U sentence-transformers
+# python -m pip install -U chromadb
+# python -m pip install -U huggingface-hub
+# python -m pip install -U python-dotenv
+#
+# ============================================================
 
-from langchain_core.prompts import PromptTemplate
-from langchain_core.prompts import ChatPromptTemplate
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint, ChatHuggingFace
-from langchain_classic.chains import create_retrieval_chain
-from langchain_classic.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
+
+from huggingface_hub import InferenceClient
+
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
+
+# ============================================================
+# STEP 1: LOAD HUGGING FACE API KEY
+# ============================================================
+
 load_dotenv()
 
-# Check for the Hugging Face API token
-hf_token = os.getenv('HUGGINGFACEHUB_API_TOKEN')
+hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+
 if not hf_token:
-    print("WARNING: HUGGINGFACEHUB_API_TOKEN not found in .env file!")
+    raise ValueError(
+        "HUGGINGFACEHUB_API_TOKEN not found in .env file"
+    )
 
-# The newer libraries specifically look for 'HF_TOKEN'
-os.environ["HF_TOKEN"] = hf_token
+print("Hugging Face API key loaded successfully.")
 
-# Step 1: Sample document
-print("\nStep 1: Preparing our document")
-print("-" * 50)
+
+# ============================================================
+# STEP 2: SAMPLE DOCUMENT
+# ============================================================
 
 document = """
-Artificial Intelligence (AI) is transforming the way we live and work. Machine learning, 
-a subset of AI, enables computers to learn from data without explicit programming. 
-Deep learning, a type of machine learning, uses neural networks inspired by the human brain.
+Artificial Intelligence (AI) is a branch of computer science
+that focuses on creating systems capable of performing tasks
+that normally require human intelligence.
 
-Natural Language Processing (NLP) is a branch of AI that helps computers understand and 
-process human language. It's used in applications like translation, chatbots, and text analysis.
+Machine Learning (ML) is a subset of Artificial Intelligence.
+It enables computers to learn patterns from data and make
+predictions or decisions without being explicitly programmed
+for every task.
 
-Computer Vision is another important field in AI. It enables machines to understand and 
-process visual information from the world, like images and videos. Applications include 
-facial recognition, autonomous vehicles, and medical image analysis.
+Deep Learning is a subset of Machine Learning that uses
+artificial neural networks with multiple layers to learn
+complex patterns from large amounts of data.
 
-Reinforcement Learning is a type of machine learning where agents learn by interacting 
-with an environment. They receive rewards for good actions and penalties for bad ones. 
-This is used in game playing, robotics, and autonomous systems.
+Natural Language Processing (NLP) is a field of Artificial
+Intelligence that focuses on enabling computers to understand,
+interpret, and generate human language.
+
+NLP is used in applications such as chatbots, language
+translation, sentiment analysis, text summarization,
+spam detection, and voice assistants.
+
+Computer Vision is another field of Artificial Intelligence
+that enables computers to understand and analyze images
+and videos.
+
+The main applications of computer vision include facial
+recognition, medical image analysis, autonomous vehicles,
+object detection, surveillance, quality inspection, and
+image classification.
+
+Reinforcement Learning is a type of Machine Learning in which
+an agent learns by interacting with an environment. The agent
+receives rewards for desirable actions and penalties for
+undesirable actions.
+
+Reinforcement Learning is commonly used in robotics, game
+playing, autonomous systems, recommendation systems, and
+decision-making problems.
 """
 
-print("Document loaded. Length:", len(document), "characters")
+
+print("\nDocument loaded. Length:", len(document), "characters")
+
 print("\nPreview of the document:")
 print(document[:200], "...\n")
 
 
-# Step 2: Text Chunking
-print("\nStep 2: Chunking the document")
-print("-" * 50)
+# ============================================================
+# STEP 3: TEXT CHUNKING
+# ============================================================
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=200,
@@ -66,24 +107,38 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 chunks = text_splitter.split_text(document)
 
-print(f"Document has been split into {len(chunks)} chunks.")
+print(
+    f"Document has been split into {len(chunks)} chunks."
+)
+
+for i, chunk in enumerate(chunks):
+
+    print(f"\nChunk {i + 1}:")
+    print(chunk)
+    print("-" * 30)
 
 
-# Step 3: Initialize Embeddings
-print("\nStep 3: Creating embeddings")
-print("-" * 50)
+# ============================================================
+# STEP 4: EMBEDDINGS
+# ============================================================
 
-# We use the new langchain_huggingface import here for the embeddings
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-print("Embedding model loaded:", embeddings.model_name)
+print(
+    "\nEmbedding model loaded:",
+    "sentence-transformers/all-MiniLM-L6-v2"
+)
+
+print(
+    "This model will convert text chunks into numerical vectors"
+)
 
 
-# Step 4: Create and populate vector store
-print("\nStep 4: Creating vector store")
-print("-" * 50)
+# ============================================================
+# STEP 5: VECTOR STORE
+# ============================================================
 
 vectorstore = Chroma.from_texts(
     texts=chunks,
@@ -91,71 +146,167 @@ vectorstore = Chroma.from_texts(
     persist_directory="./chroma_db"
 )
 
-print("Vector store created successfully.")
+print("\nVector store created with following details:")
 
+print(f"- Number of texts: {len(chunks)}")
 
-# Step 5: Similarity Search Example
-print("\nStep 5: Testing similarity search")
-print("-" * 50)
-
-query = "What is reinforcement learning?"
-results = vectorstore.similarity_search(query, k=2)
-
-print(f"Query: {query}")
-print("\nTop 2 most relevant chunks:")
-for i, doc in enumerate(results):
-    print(f"\nResult {i+1}:")
-    print(doc.page_content)
-
-
-# Step 6: Setting up Modern RAG pipeline
-print("\nStep 6: Setting up Modern RAG pipeline")
-print("-" * 50)
-
-print("Connecting to Hugging Face API...")
-
-# 1. Initialize the LLM (No Chat wrapper needed!)
-llm = HuggingFaceEndpoint(
-    repo_id="mistralai/Mistral-7B-Instruct-v0.3", 
-    task="text-generation",
-    max_new_tokens=512,
-    temperature=0.5,
-    do_sample=True,
-    huggingfacehub_api_token=hf_token
+print(
+    f"- Embedding dimension: "
+    f"{len(embeddings.embed_query('test'))}"
 )
 
-# 2. Create a Standard Prompt Template
-template = """You are an assistant for question-answering tasks. 
-Use the following pieces of retrieved context to answer the question. 
-If you don't know the answer, just say that you don't know.
+print("- Database location: ./chroma_db")
 
-Context: {context}
 
-Question: {input}
+# ============================================================
+# STEP 6: SIMILARITY SEARCH
+# ============================================================
 
-Answer:"""
+query = "What is reinforcement learning?"
 
-prompt = PromptTemplate.from_template(template)
+results = vectorstore.similarity_search(
+    query,
+    k=2
+)
 
-# 3. Create the Document Chain
-question_answer_chain = create_stuff_documents_chain(llm, prompt)
+print(f"\nQuery: {query}")
 
-# 4. Create the Retrieval Chain
-qa_chain = create_retrieval_chain(vectorstore.as_retriever(), question_answer_chain)
+print("\nTop 2 most relevant chunks:")
 
-# Example questions to ask
+for i, doc in enumerate(results):
+
+    print(f"\nResult {i + 1}:")
+    print(doc.page_content)
+
+    print("-" * 30)
+
+
+# ============================================================
+# STEP 7: HUGGING FACE INFERENCE CLIENT
+# ============================================================
+
+client = InferenceClient(
+    api_key=hf_token
+)
+
+
+# ============================================================
+# STEP 8: SELECT MODEL
+# ============================================================
+
+model = "Qwen/Qwen3-8B"
+
+print("\nHugging Face model:", model)
+
+
+# ============================================================
+# STEP 9: RAG FUNCTION
+# ============================================================
+
+def ask_rag(question):
+
+    # --------------------------------------------------------
+    # Retrieve relevant documents
+    # --------------------------------------------------------
+
+    relevant_docs = vectorstore.similarity_search(
+        question,
+        k=2
+    )
+
+    # --------------------------------------------------------
+    # Combine retrieved chunks
+    # --------------------------------------------------------
+
+    context = "\n\n".join(
+        doc.page_content
+        for doc in relevant_docs
+    )
+
+    # --------------------------------------------------------
+    # Create RAG prompt
+    # --------------------------------------------------------
+
+    prompt = f"""
+You are a helpful AI assistant.
+
+Answer the question using ONLY the information
+provided in the context below.
+
+If the answer is not available in the context,
+say:
+
+"I don't know based on the provided document."
+
+Do not invent information.
+
+Context:
+{context}
+
+Question:
+{question}
+"""
+
+    # --------------------------------------------------------
+    # Hugging Face Chat Completion
+    # --------------------------------------------------------
+
+    response = client.chat.completions.create(
+
+        model=model,
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+
+        max_tokens=256,
+
+        temperature=0.2
+    )
+
+    # --------------------------------------------------------
+    # Extract answer
+    # --------------------------------------------------------
+
+    answer = response.choices[0].message.content
+
+    return answer
+
+
+# ============================================================
+# STEP 10: ASK QUESTIONS TO RAG SYSTEM
+# ============================================================
+
 questions = [
+
     "What is reinforcement learning and how does it work?",
+
     "What are the main applications of computer vision?",
+
     "How is NLP used in real-world applications?"
+
 ]
 
-print("\nAsking questions to our Modern Hugging Face RAG system:")
+
+print("\nAsking questions to our Hugging Face RAG system:")
+
 
 for question in questions:
+
     print("\nQuestion:", question)
+
     try:
-        response = qa_chain.invoke({"input": question})
-        print("Answer:", response["answer"])
+
+        answer = ask_rag(question)
+
+        print("Answer:", answer)
+
     except Exception as e:
-        print("Error getting answer:", str(e))
+
+        print(
+            "Error getting answer:",
+            str(e)
+        )  

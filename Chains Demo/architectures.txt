@@ -1,0 +1,53 @@
+SEQUENTIAL CHAIN DEMO
+┌─────────────────────┐
+│  Employee Review    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│      CHAIN 1        │
+│  Summary Generator  │
+└──────────┬──────────┘
+           │
+           │ summary
+           ▼
+┌─────────────────────┐
+│      CHAIN 2        │
+│ Weakness Identifier │
+└──────────┬──────────┘
+           │
+           │ weaknesses
+           ▼
+┌─────────────────────┐
+│      CHAIN 3        │
+│   Action Planner    │
+└──────────┬──────────┘
+           │
+           │ plan
+           ▼
+┌─────────────────────┐
+│    FINAL RESULT     │
+└─────────────────────┘
+
+LLM ROUTER CHAIN
+
+    User Question
+      │
+      ▼
+    Router
+      │
+ ┌────┴──────────────┐
+ │                   │
+ ▼                   ▼
+Beginner          Advanced
+Prompt             Prompt
+ │                   │
+ └────────┬──────────┘
+          ▼
+       Ollama
+          │
+          ▼
+   Local LLM
+          │
+          ▼
+       Answer

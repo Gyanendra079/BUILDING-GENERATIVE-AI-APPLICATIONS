@@ -1,0 +1,32 @@
+                SIMPLE RAG DEMO
+                       │
+                       ▼
+              Sample Text Document
+                       │
+                       ▼
+               Text Chunking
+                       │
+                       ▼
+               Hugging Face Embeddings
+                  all-MiniLM-L6-v2
+                       │
+                       ▼
+                     ChromaDB
+                       │
+                       ▼
+              Similarity Search
+                       │
+                       ▼
+              Top Relevant Chunks
+                       │
+                       ▼
+             RAG Context + Question
+                       │
+                       ▼
+       Hugging Face Chat Completion API
+                       │
+                       ▼
+                 Qwen/Qwen3-8B
+                       │
+                       ▼
+                    Answer

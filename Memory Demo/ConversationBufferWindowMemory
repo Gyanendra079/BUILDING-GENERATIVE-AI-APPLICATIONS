@@ -1,0 +1,97 @@
+# python -m pip install -U huggingface_hub python-dotenv
+
+# ============================================================
+# CONVERSATION MEMORY USING HUGGING FACE API
+# ============================================================
+
+# Install:
+# python -m pip install -U huggingface_hub python-dotenv
+
+from huggingface_hub import InferenceClient
+from dotenv import load_dotenv
+import os
+
+
+# ============================================================
+# 1. LOAD ENVIRONMENT VARIABLES
+# ============================================================
+
+load_dotenv()
+
+hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+
+
+# ============================================================
+# 2. INITIALIZE HUGGING FACE CLIENT
+# ============================================================
+
+client = InferenceClient(
+    api_key=hf_token
+)
+
+
+# ============================================================
+# 3. SELECT MODEL
+# ============================================================
+
+MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+
+
+# ============================================================
+# 4. CONVERSATION MEMORY
+# ============================================================
+
+conversation_history = []
+
+
+# ============================================================
+# 5. FUNCTION TO TALK TO THE MODEL
+# ============================================================
+
+def chat(user_input):
+
+    # Add current user message to memory
+    conversation_history.append({
+        "role": "user",
+        "content": user_input
+    })
+
+    # Send complete conversation history
+    response = client.chat_completion(
+        model=MODEL,
+        messages=conversation_history,
+        max_tokens=256,
+        temperature=0.7
+    )
+
+    # Extract AI response
+    ai_response = response.choices[0].message.content
+
+    # Add AI response to memory
+    conversation_history.append({
+        "role": "assistant",
+        "content": ai_response
+    })
+
+    return ai_response
+
+
+# ============================================================
+# 6. SAME INPUTS AS YOUR ORIGINAL CODE
+# ============================================================
+
+print(
+    chat("Hi, my name is Gyanendra")
+)
+
+print(
+    chat("I'm doing well! Just having a conversation with an AI.")
+)
+
+print(
+    chat("what is AI?")
+)
+
+print(
+    chat("what is my name?")
+)

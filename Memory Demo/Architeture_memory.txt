@@ -1,0 +1,44 @@
+                    MEMORY DEMO
+                         │
+                         ▼
+                 User Input
+                         │
+                         ▼
+             ConversationBufferMemory
+                         │
+                  Previous History
+                         │
+                         ▼
+                  Chat Prompt
+                         │
+                         ▼
+        Local Hugging Face Transformer
+        Qwen/Qwen2.5-0.5B-Instruct
+                         │
+                         ▼
+                    AI Response
+                         │
+                         ▼
+                Save to Memory
+                         │
+                         └──────► Next Question
+
+CONVERSATIONAL SUMMARY MEMORY
+
+ConversationSummaryMemory
+        │
+        ▼
+ConversationChain
+        │
+        ▼
+ChatHuggingFace
+        │
+        ▼
+HuggingFaceEndpoint
+        │
+        ▼
+Hugging Face Inference
+        │
+        ▼
+Mistral-7B-Instruct
+
